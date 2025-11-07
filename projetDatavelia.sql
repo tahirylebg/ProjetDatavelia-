@@ -86,3 +86,40 @@ BEGIN
 
 END;
 
+--Créer une procédure pour créer une nouvelle descendance basée sur une alliance donnée--
+
+CREATE PROCEDURE creerDescendance(
+        IN nom_descendance VARCHAR(50),
+        IN alliance INT
+        )
+BEGIN
+    DECLARE moyenne DECIMAL(5,2);-- Variable pour stocker la moyenne
+    SET moyenne = puissanceMoyenneAlliance(alliance);-- On calcule la moyenne
+
+    -- On insère une nouvelle descendance avec la puissance heritée--
+    INSERT INTO descendances (name, allianceID, puissance_heritee)
+    VALUES (nom_descendance, alliance, moyenne);
+
+END;
+
+
+GRANT SELECT ON *.* TO 'moines'@'localhost';                 -- Les moines peuvent lire
+GRANT INSERT ON habitants TO 'artisans'@'localhost';         -- Les artisans peuvent insérer
+GRANT UPDATE ON alliances TO 'chevaliers'@'localhost';       -- Les chevaliers peuvent mettre à jour
+GRANT ALL PRIVILEGES ON datavellia.* TO 'roi'@'localhost';   -- Le roi peut tout faire
+
+--Créer une table pour journaliser les événements importants--
+CREATE TABLE iF NOT EXISTS journalDesEvenements (
+    id INT AUTO_INCREMENT PRIMARY KEY,             -- Identifiant de l'événement
+    evenement VARCHAR(255),                        -- Description de l'événement
+    date_evenement DATETIME DEFAULT CURRENT_TIMESTAMP  -- Date et heure automatiques
+);
+
+--Créer un trigger pour journaliser la création d'une nouvelle alliance--
+CREATE TRIGGER log_alliance_creation
+AFTER INSERT ON alliances
+FOR EACH ROW
+BEGIN
+    INSERT INTO journalDesEvenements (evenement)
+    VALUES (CONCAT('Nouvelle alliance créée : ', NEW.nom));  -- Ajout automatique
+END;
