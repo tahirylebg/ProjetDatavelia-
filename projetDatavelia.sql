@@ -123,3 +123,121 @@ BEGIN
     INSERT INTO journalDesEvenements (evenement)
     VALUES (CONCAT('Nouvelle alliance créée : ', NEW.nom));  -- Ajout automatique
 END;
+
+
+--Chapitre III--
+
+-- Exercice I : Le Miroir des Titres
+
+-- 1️) Ajouter une nouvelle colonne "niveau_honneur" dans la table roles
+ALTER TABLE roles
+ADD niveau_honneur INT;
+
+-- 2️) Vérifier la table
+SELECT * FROM roles;
+
+-- 3️) Mettre à jour chaque rôle avec un niveau d’honneur selon sa gloire
+UPDATE roles SET niveau_honneur = 10 WHERE name = 'Chevaliers';
+UPDATE roles SET niveau_honneur = 8 WHERE name = 'Moines Archivistes';
+UPDATE roles SET niveau_honneur = 7 WHERE name = 'Artisans du code';
+UPDATE roles SET niveau_honneur = 5 WHERE name = 'Bourgeois';
+
+-- 4️) Afficher les rôles triés par honneur décroissant
+SELECT * FROM roles
+ORDER BY niveau_honneur DESC;
+
+-- Exercice II : Les Doubles Liens des Maisons
+
+-- Requête pour relier habitants → rôles → alliances
+SELECT 
+    h.name AS habitant,
+    r.name AS role,
+    a.name AS alliance
+FROM habitants h
+JOIN roles r ON h.roleID = r.id
+LEFT JOIN alliances a 
+    ON r.id = a.roleID1 OR r.id = a.roleID2;
+
+
+-- Exercice III : Les Héritiers des Héritiers
+
+-- 1️ ) Créer une vue affichant les descendants, leur alliance et leur puissance héritée
+CREATE OR REPLACE VIEW vue_lignee_royale AS
+SELECT 
+    d.name AS descendant,
+    a.name AS alliance_origine,
+    d.puissance_heritee,
+    AVG(d.puissance_heritee) OVER (PARTITION BY a.id) AS puissance_moyenne_alliance
+FROM descendances d
+JOIN alliances a ON d.allianceID = a.id;
+
+-- 2️ ) Afficher la vue
+SELECT * FROM vue_lignee_royale;
+
+-- Exercice IV : Le miroir des instructions 
+
+-- 1) Creer une table pour gerer les intrusions 
+CREATE TABLE INTRUSIONS ( 
+    id INT AUTO_INCREMENT PRIMARY KEY, 
+    utilisateur VARCHAR(100),
+    action VARCHAR(255),
+    dateEvenement DATETIME DEFAULT CURRENT_TIMESTAMP,
+    gravite ENUM('faible', 'moyenne', 'haute') DEFAULT 'faible'
+);
+
+-- 2) Creer un trigger pour journaliser les tentatives d'intrusions
+CREATE TRIGGER log_intrusion
+AFTER INSERT ON journalDesEvenements
+FOR EACH ROW
+BEGIN
+    IF NEW.evenement LIKE '%erreur%' OR NEW.evenement LIKE '%connexion%' THEN
+        INSERT INTO intrusions (utilisateur, action, gravite)
+        VALUES ('inconnu', NEW.evenement, 'haute'); 
+    END IF;
+END;
+
+-- 3) Créer une vue listant les 5 dernières intrusions
+CREATE OR REPLACE VIEW vue_dernieres_intrusions AS
+SELECT *
+FROM intrusions
+ORDER BY date_evenement DESC
+LIMIT 5;
+
+-- 4) Afficher la vue
+INSERT INTO journalDesEvenements (evenement) VALUES ('Tentative de connexion refusée');
+INSERT INTO journalDesEvenements (evenement) VALUES ('Erreur critique détectée');
+INSERT INTO journalDesEvenements (evenement) VALUES ('Nouvelle alliance créée : Ordre des Architectes');
+
+
+-- EXERCICE V : Les Portails du Réseau
+
+CREATE TABLE pare_feu (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    adresseIP VARCHAR(45),
+    regle ENUM('autoriser', 'bloquer') NOT NULL,
+    description VARCHAR(255),
+    date_ajout DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2️)Insérer des règles d’autorisation et de blocage
+INSERT INTO pare_feu (adresse_ip, regle, description) VALUES
+('192.168.1.10', 'autoriser', 'Serveur interne'),
+('192.168.1.55', 'bloquer', 'Adresse suspecte détectée'),
+('10.0.0.7', 'bloquer', 'Tentative d’accès non autorisée'),
+('172.16.0.3', 'autoriser', 'Terminal de confiance');
+
+-- 3️) Creer une vue affichant uniquement les connexions bloquees
+CREATE OR REPLACE VIEW vue_connexions_bloquees AS
+SELECT adresse_ip, description, date_ajout
+FROM pare_feu
+WHERE regle = 'bloquer';
+
+-- 4️ ) Créer une fonction pour ajouter automatiquement une règle au pare-feu
+CREATE FUNCTION ajouter_regle(ip VARCHAR(45), action ENUM('autoriser', 'bloquer'), desc_text VARCHAR(255))
+RETURNS VARCHAR(255)
+DETERMINISTIC
+BEGIN
+    INSERT INTO pare_feu (adresse_ip, regle, description)
+    VALUES (ip, action, desc_text);
+    RETURN CONCAT('Règle ajoutée pour : ', ip, ' → ', action);
+END
