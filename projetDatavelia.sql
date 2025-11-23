@@ -60,11 +60,12 @@ CREATE TABLE alliances (
 
 --Creer la table des descendances--
 CREATE TABLE descendances (
-    idAlliance INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(50),
+    idDescendant INT AUTO_INCREMENT PRIMARY KEY,
+    nameDescendant VARCHAR(50) NOT NULL,
+    emailDescendant VARCHAR(50) NOT NULL,
     allianceID INT,
     puissance_heritee DECIMAL(5,2),
-    FOREIGN KEY (allianceID) REFERENCES alliances(idAlliance)
+    FOREIGN KEY (idAlliance) REFERENCES alliances(idAlliance)
 );
 
 --Calculer la puissance moyenne des alliances --
