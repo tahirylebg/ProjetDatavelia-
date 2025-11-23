@@ -78,7 +78,7 @@ INSERT INTO alliances (nameAlliance, roleID1, roleID2) VALUES
 
 --Calculer la puissance moyenne des alliances --
 
-CREATE FUNCTION puissanceMoyenneAlliance(alliance INT)
+CREATE FUNCTION puissanceMoyenneAlliance(puissanceAllianceID INT)
 RETURNS DECIMAL(5,2)
 DETERMINISTIC --La fonction est déterministe car pour une même alliance, la puissance moyenne sera toujours la même.--
 BEGIN
@@ -88,9 +88,9 @@ BEGIN
     SELECT AVG(niveau_pouvoir) INTO moyenne
     FROM habitants
     WHERE roleID IN (
-        SELECT roleID1 FROM alliances WHERE id = alliance
+        SELECT roleID1 FROM alliances WHERE id = puissanceAllianceID
         UNION--On utilise l'union pour combiner les deux ensembles de rôles.--
-        SELECT roleID2 FROM alliances WHERE id = alliance
+        SELECT roleID2 FROM alliances WHERE id = puissanceAllianceID
     );
 
     RETURN moyenne; --Retourner la moyenne calculée.--
