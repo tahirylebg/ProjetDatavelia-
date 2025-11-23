@@ -54,6 +54,8 @@ CREATE TABLE alliances (
     roleID2 INT,
     FOREIGN KEY (roleID1) REFERENCES roles(id),
     FOREIGN KEY (roleID2) REFERENCES roles(id)
+    CHECK (roleID1 != roleID2),
+    CHECK (roleID1 < roleID2)
     );
 
 --Creer la table des descendances--
