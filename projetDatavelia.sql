@@ -52,8 +52,8 @@ CREATE TABLE alliances (
     name VARCHAR(100),
     roleID1 INT,
     roleID2 INT,
-    FOREIGN KEY (roleID1) REFERENCES roles(id),
-    FOREIGN KEY (roleID2) REFERENCES roles(id)
+    FOREIGN KEY (roleID1) REFERENCES roles(idRole),
+    FOREIGN KEY (roleID2) REFERENCES roles(idRole)
     CHECK (roleID1 != roleID2),
     CHECK (roleID1 < roleID2)
     );
