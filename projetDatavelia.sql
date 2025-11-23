@@ -49,7 +49,7 @@ WHERE nom = 'Ménestrel du Codes';
 --Creer la table des alliances--
 CREATE TABLE alliances (
     idAlliance INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100),
+    nameAlliance VARCHAR(100),
     roleID1 INT,
     roleID2 INT,
     FOREIGN KEY (roleID1) REFERENCES roles(idRole),
@@ -67,6 +67,14 @@ CREATE TABLE descendances (
     puissance_heritee DECIMAL(5,2),
     FOREIGN KEY (idAlliance) REFERENCES alliances(idAlliance)
 );
+
+INSERT INTO alliances (nameAlliance, roleID1, roleID2) VALUES
+('Ordre des Architectes Spirituels', 2, 3),
+('Pacte des Lames Marchandes', 1, 4),
+('Alliance de la Terre Sacrée', 2, 5),
+('Confrérie des Forgerons Guerriers', 1, 3),
+('Guilde des Commerçants Ruraux', 4, 5);
+
 
 --Calculer la puissance moyenne des alliances --
 
