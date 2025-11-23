@@ -48,7 +48,7 @@ WHERE nom = 'Ménestrel du Codes';
 
 --Creer la table des alliances--
 CREATE TABLE alliances (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    idAlliance INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100),
     roleID1 INT,
     roleID2 INT,
