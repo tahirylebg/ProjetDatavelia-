@@ -3,13 +3,13 @@ USE datavellia;
 
 --Creer la table des roles : Cette table sera le livre des titres et honneurs.--
 CREATE TABLE roles (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    idRole INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL
 );
 
 --Creer la table des habitants : Cette table sera le registre royal des âmes de Datavellia.--
 CREATE TABLE habitants (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    idHabitant INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) ,
     roleID INT,
