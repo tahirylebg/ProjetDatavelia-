@@ -29,10 +29,10 @@ INSERT INTO roles (name) VALUES
 --Inserer les habitants --
 
 INSERT INTO habitants (name, email, idRole) VALUES
-('Chimère', 'aldric@datavellia.com', 1),
-('Garuda', 'lyra@datavellia.com', 2),
-('Griffon', 'thom@datavellia.com', 3),
-('Harpie', 'elena@datavellia.com', 4);
+('Chimère', 'chimere@datavellia.com', 1),
+('Garuda', 'garuda@datavellia.com', 2),
+('Griffon', 'griffon@datavellia.com', 3),
+('Harpie', 'harpie@datavellia.com', 4);
 
 
 --Afficher chaque habitant avec son rôle--
