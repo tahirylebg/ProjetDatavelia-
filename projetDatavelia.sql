@@ -37,9 +37,10 @@ INSERT INTO habitants (name, email, idRole) VALUES
 
 --Afficher chaque habitant avec son rôle--
 SELECT habitants.nom AS habitant,
- roles.nom AS role
- FROM habitants
-JOIN roles ON habitants.role_id = roles.id;
+       habitant.email,
+       roles.nom AS role
+FROM habitants h
+JOIN roles r ON habitants.role_id = r.id;
 
 --Corriger le lapsus du scribe--
 UPDATE habitants
