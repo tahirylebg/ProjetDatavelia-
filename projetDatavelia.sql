@@ -4,252 +4,371 @@ USE datavellia;
 --Creer la table des roles : Cette table sera le livre des titres et honneurs.--
 CREATE TABLE roles (
     idRole INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(50) NOT NULL
+    nomRole VARCHAR(100) NOT NULL
 );
 
 --Creer la table des habitants : Cette table sera le registre royal des âmes de Datavellia.--
 CREATE TABLE habitants (
     idHabitant INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) ,
-    roleID INT,
-    FOREIGN KEY (roleID) REFERENCES roles(id)
-    );
-
---Inserer dans les tables--
+    nomHabitant VARCHAR(100) NOT NULL,
+    emailHabitant VARCHAR(150) UNIQUE NOT NULL,
+    idRole INT,
+    FOREIGN KEY (idRole) REFERENCES roles(idRole)
+);
 
 --Inserer les rôles --
-
-INSERT INTO roles (name) VALUES
-('Chevaliers'), --Les chevaliers protègent les routes de données contre les attaques du chaos--
-('Moines Archivistes'),--Les moines archivistes conservent les chroniques, veillant sur la pureté des infos--
-('Artisans du code'),--Les artisans du code forgent des scripts et bâtissent des structures.--
-('Bourgeois');--Et les bourgeois commercent, échangent, partagent des valeurs et des idées--
+INSERT INTO roles (nomRole) VALUES
+('Chevaliers'),
+('Moines Archivistes'),
+('Artisans du code'),
+('Bourgeois');
 
 --Inserer les habitants --
-
-INSERT INTO habitants (name, email, idRole) VALUES
+INSERT INTO habitants (nomHabitant, emailHabitant, idRole) VALUES
 ('Chimère', 'chimere@datavellia.com', 1),
 ('Garuda', 'garuda@datavellia.com', 2),
 ('Griffon', 'griffon@datavellia.com', 3),
 ('Harpie', 'harpie@datavellia.com', 4);
 
-
 --Afficher chaque habitant avec son rôle--
-SELECT habitants.nom AS habitant,
-       habitant.email,
-       roles.nom AS role
-FROM habitants h
-JOIN roles r ON habitants.role_id = r.id;
+SELECT 
+    hab.idHabitant,
+    hab.nomHabitant,
+    hab.emailHabitant,
+    r.nomRole
+FROM habitants AS hab
+JOIN roles AS r ON hab.idRole = r.idRole;
 
 --Corriger le lapsus du scribe--
-UPDATE habitants
-SET nom = 'Ménestrel du Code'
-WHERE nom = 'Ménestrel du Codes';
+UPDATE roles
+SET nomRole = 'Ménestrel du Code'
+WHERE nomRole = 'Menestrel du Codes';
+
+--Chapitre I Extension--
+
+--1--
+CREATE TABLE guildes (
+    idGuilde INT AUTO_INCREMENT PRIMARY KEY,
+    nomGuilde VARCHAR(100) NOT NULL,
+    descriptionGuilde VARCHAR(255),
+    dateCreation DATE DEFAULT CURRENT_DATE,
+    siegeSocial VARCHAR(200)
+);
+
+ALTER TABLE habitants
+ADD idGuilde INT NULL,
+ADD niveauPouvoir INT DEFAULT 1 CHECK (niveauPouvoir BETWEEN 1 AND 100),
+ADD FOREIGN KEY (idGuilde) REFERENCES guildes(idGuilde);
+
+--2--
+CREATE TABLE roles_guildes (
+    idRole INT NOT NULL,
+    idGuilde INT NOT NULL,
+    dateAffiliation DATE DEFAULT CURRENT_DATE,
+    PRIMARY KEY (idRole, idGuilde),
+    FOREIGN KEY (idRole) REFERENCES roles(idRole) ON DELETE CASCADE,
+    FOREIGN KEY (idGuilde) REFERENCES guildes(idGuilde) ON DELETE CASCADE
+);
+
+INSERT INTO guildes (nomGuilde, descriptionGuilde, siegeSocial) VALUES
+('Guilde des Lames', 'Chevaliers valeureux, défenseurs du royaume', 'Château d’Albion'),
+('Guilde des Archives', 'Moines érudits, gardiens du savoir', 'Monastère de Fondcombe'),
+('Forge Numérique', 'Artisans du code et bâtisseurs de scripts', 'Montagnes de Moria'),
+('Compagnie Dorée', 'Marchands de valeurs et négociants', 'Port de Dorwinion');
+
+--3--
+UPDATE habitants SET idGuilde = 1, niveauPouvoir = 85 WHERE nomHabitant = 'Chimère';
+UPDATE habitants SET idGuilde = 2, niveauPouvoir = 65 WHERE nomHabitant = 'Garuda';
+UPDATE habitants SET idGuilde = 3, niveauPouvoir = 75 WHERE nomHabitant = 'Griffon';
+UPDATE habitants SET idGuilde = 4, niveauPouvoir = 60 WHERE nomHabitant = 'Harpie';
+
+INSERT INTO roles_guildes (idRole, idGuilde) VALUES
+(1, 1),
+(2, 2),
+(3, 3),
+(4, 4);
+
+SELECT  
+    hab.nomHabitant,
+    hab.emailHabitant,
+    r.nomRole,
+    gld.nomGuilde,
+    hab.niveauPouvoir
+FROM habitants AS hab
+JOIN roles AS r ON hab.idRole = r.idRole
+LEFT JOIN guildes AS gld ON hab.idGuilde = gld.idGuilde
+ORDER BY hab.niveauPouvoir DESC;
+
+--Chapitre II--
 
 --Creer la table des alliances--
 CREATE TABLE alliances (
     idAlliance INT AUTO_INCREMENT PRIMARY KEY,
-    nameAlliance VARCHAR(100),
-    roleID1 INT,
-    roleID2 INT,
+    nomAlliance VARCHAR(100) NOT NULL,
+    roleID1 INT NOT NULL,
+    roleID2 INT NOT NULL,
     FOREIGN KEY (roleID1) REFERENCES roles(idRole),
-    FOREIGN KEY (roleID2) REFERENCES roles(idRole)
+    FOREIGN KEY (roleID2) REFERENCES roles(idRole),
     CHECK (roleID1 != roleID2),
     CHECK (roleID1 < roleID2)
-    );
+);
 
 --Creer la table des descendances--
-CREATE TABLE descendances (
+CREATE TABLE descendance (
     idDescendant INT AUTO_INCREMENT PRIMARY KEY,
-    nameDescendant VARCHAR(50) NOT NULL,
-    emailDescendant VARCHAR(50) NOT NULL,
-    allianceID INT,
-    puissance_heritee DECIMAL(5,2),
+    nomDescendant VARCHAR(100) NOT NULL,
+    idAlliance INT NOT NULL,
+    niveauPuissanceHeritee INT,
+    dateNaissance DATE DEFAULT CURRENT_DATE,
     FOREIGN KEY (idAlliance) REFERENCES alliances(idAlliance)
 );
 
-INSERT INTO alliances (nameAlliance, roleID1, roleID2) VALUES
+INSERT INTO alliances (nomAlliance, roleID1, roleID2) VALUES
 ('Ordre des Architectes Spirituels', 2, 3),
 ('Pacte des Lames Marchandes', 1, 4),
-('Alliance de la Terre Sacrée', 2, 5),
+('Alliance de la Terre Sacrée', 2, 4),
 ('Confrérie des Forgerons Guerriers', 1, 3),
-('Guilde des Commerçants Ruraux', 4, 5);
+('Guilde des Commerçants Ruraux', 4, 3);
 
+--Calculer la puissance moyenne des alliances--
 
---Calculer la puissance moyenne des alliances --
-
-CREATE FUNCTION puissanceMoyenneAlliance(puissanceAllianceID INT)
+DELIMITER //
+CREATE FUNCTION puissanceMoyenneAlliance(p_idAlliance INT)
 RETURNS DECIMAL(5,2)
-DETERMINISTIC --La fonction est déterministe car pour une même alliance, la puissance moyenne sera toujours la même.--
+DETERMINISTIC
 BEGIN
-    DECLARE moyenne DECIMAL(5,2); --La variable pour stocker la moyenne.--
+    DECLARE moyenne DECIMAL(5,2);
 
-    --Nous calculons la moyenne des pouvoirs des habitants qui apparetiennent aux deuc roles de l'alliance--
-    SELECT AVG(niveau_pouvoir) INTO moyenne
-    FROM habitants
-    WHERE roleID IN (
-        SELECT roleID1 FROM alliances WHERE id = puissanceAllianceID
-        UNION--On utilise l'union pour combiner les deux ensembles de rôles.--
-        SELECT roleID2 FROM alliances WHERE id = puissanceAllianceID
-    );
+    SELECT AVG(hab.niveauPouvoir)
+    INTO moyenne
+    FROM habitants hab
+    JOIN alliances a ON a.idAlliance = p_idAlliance
+    WHERE hab.idRole IN (a.roleID1, a.roleID2);
 
-    RETURN moyenne; --Retourner la moyenne calculée.--
-
-END;
+    RETURN moyenne;
+END //
+DELIMITER ;
 
 --Créer une procédure pour créer une nouvelle descendance basée sur une alliance donnée--
-
-CREATE PROCEDURE creerDescendance(
-        IN nom_descendance VARCHAR(50),
-        IN alliance INT
-        )
+DELIMITER //
+CREATE PROCEDURE creerDescendant (
+    IN p_nomDescendant VARCHAR(100),
+    IN p_idAlliance INT
+)
 BEGIN
-    DECLARE moyenne DECIMAL(5,2);-- Variable pour stocker la moyenne
-    SET moyenne = puissanceMoyenneAlliance(alliance);-- On calcule la moyenne
+    DECLARE puissanceHeritee DECIMAL(5,2);
+    SET puissanceHeritee = puissanceMoyenneAlliance(p_idAlliance);
 
-    -- On insère une nouvelle descendance avec la puissance heritée--
-    INSERT INTO descendances (name, allianceID, puissance_heritee)
-    VALUES (nom_descendance, alliance, moyenne);
+    INSERT INTO descendance (nomDescendant, idAlliance, niveauPuissanceHeritee)
+    VALUES (p_nomDescendant, p_idAlliance, puissanceHeritee);
+END //
+DELIMITER ;
 
-END;
+-- Moines archivistes : lecture uniquement
+GRANT SELECT ON habitants, roles, guildes, alliances, descendance TO moines_archivistes;
 
+-- Artisans : peuvent ajouter des habitants
+GRANT INSERT ON habitants TO artisans_code;
 
-GRANT SELECT ON *.* TO 'moines'@'localhost';                 -- Les moines peuvent lire
-GRANT INSERT ON habitants TO 'artisans'@'localhost';         -- Les artisans peuvent insérer
-GRANT UPDATE ON alliances TO 'chevaliers'@'localhost';       -- Les chevaliers peuvent mettre à jour
-GRANT ALL PRIVILEGES ON datavellia.* TO 'roi'@'localhost';   -- Le roi peut tout faire
+-- Chevaliers : peuvent modifier les alliances
+GRANT UPDATE ON alliances TO chevaliers;
+
+-- Roi : pouvoir absolu
+GRANT ALL PRIVILEGES ON *.* TO to_i_student WITH GRANT OPTION;
 
 --Créer une table pour journaliser les événements importants--
-CREATE TABLE iF NOT EXISTS journalDesEvenements (
-    id INT AUTO_INCREMENT PRIMARY KEY,             -- Identifiant de l'événement
-    evenement VARCHAR(255),                        -- Description de l'événement
-    date_evenement DATETIME DEFAULT CURRENT_TIMESTAMP  -- Date et heure automatiques
+CREATE TABLE journalEvenements (
+    idEvenement INT AUTO_INCREMENT PRIMARY KEY,
+    typeEvenement VARCHAR(50),
+    detailsEvenement VARCHAR(255),
+    dateEvenement TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 --Créer un trigger pour journaliser la création d'une nouvelle alliance--
-CREATE TRIGGER log_alliance_creation
+DELIMITER //
+CREATE TRIGGER logNouvelleAlliance
 AFTER INSERT ON alliances
 FOR EACH ROW
 BEGIN
-    INSERT INTO journalDesEvenements (evenement)
-    VALUES (CONCAT('Nouvelle alliance créée : ', NEW.nom));  -- Ajout automatique
-END;
+    INSERT INTO journalEvenements (typeEvenement, detailsEvenement)
+    VALUES ('Alliance créée', CONCAT('Alliance : ', NEW.nomAlliance));
+END //
+DELIMITER ;
 
+--Créer un trigger pour journaliser la naissance d'un nouveau descendant--
+DELIMITER //
+CREATE TRIGGER logNouvelleNaissance
+AFTER INSERT ON descendance
+FOR EACH ROW
+BEGIN
+    INSERT INTO journalEvenements (typeEvenement, detailsEvenement)
+    VALUES ('Naissance', CONCAT('Descendant : ', NEW.nomDescendant));
+END //
+DELIMITER ;
+
+--Créer une vue pour afficher les chroniques des descendants avec leur alliance et puissance héritée--
+CREATE OR REPLACE VIEW chroniques_du_royaume AS
+SELECT 
+    dsc.nomDescendant,
+    a.nomAlliance,
+    dsc.niveauPuissanceHeritee,
+    dsc.dateNaissance
+FROM descendance dsc
+JOIN alliances a ON dsc.idAlliance = a.idAlliance;
 
 --Chapitre III--
 
 -- Exercice I : Le Miroir des Titres
 
--- 1️) Ajouter une nouvelle colonne "niveau_honneur" dans la table roles
 ALTER TABLE roles
-ADD niveau_honneur INT;
+ADD COLUMN niveauHonneur INT DEFAULT 0;
 
--- 2️) Vérifier la table
 SELECT * FROM roles;
 
--- 3️) Mettre à jour chaque rôle avec un niveau d’honneur selon sa gloire
-UPDATE roles SET niveau_honneur = 10 WHERE name = 'Chevaliers';
-UPDATE roles SET niveau_honneur = 8 WHERE name = 'Moines Archivistes';
-UPDATE roles SET niveau_honneur = 7 WHERE name = 'Artisans du code';
-UPDATE roles SET niveau_honneur = 5 WHERE name = 'Bourgeois';
+UPDATE roles
+SET nomRole = 
+    CASE
+        WHEN nomRole = 'Chevaliers' THEN 'Chevalier'
+        WHEN nomRole = 'Moines Archivistes' THEN 'Moine Archiviste'
+        WHEN nomRole = 'Artisans du code' THEN 'Artisan du code'
+        WHEN nomRole = 'Bourgeois' THEN 'Bourgeois'
+    END;
 
--- 4️) Afficher les rôles triés par honneur décroissant
+UPDATE roles SET niveauHonneur = 10 WHERE nomRole = 'Chevalier';
+UPDATE roles SET niveauHonneur = 8 WHERE nomRole = 'Moine Archiviste';
+UPDATE roles SET niveauHonneur = 7 WHERE nomRole = 'Artisan du code';
+UPDATE roles SET niveauHonneur = 5 WHERE nomRole = 'Bourgeois';
+
 SELECT * FROM roles
-ORDER BY niveau_honneur DESC;
+ORDER BY niveauHonneur DESC;
 
 -- Exercice II : Les Doubles Liens des Maisons
-
--- Requête pour relier habitants → rôles → alliances
-SELECT 
-    h.name AS habitant,
-    r.name AS role,
-    a.name AS alliance
-FROM habitants h
-JOIN roles r ON h.roleID = r.id
-LEFT JOIN alliances a 
-    ON r.id = a.roleID1 OR r.id = a.roleID2;
-
+SELECT
+    hab.nomHabitant,
+    hab.emailHabitant,
+    r.nomRole,
+    a.nomAlliance
+FROM habitants AS hab
+JOIN roles AS r ON hab.idRole = r.idRole
+LEFT JOIN alliances AS a ON (r.idRole = a.roleID1 OR r.idRole = a.roleID2)
+ORDER BY hab.nomHabitant;
 
 -- Exercice III : Les Héritiers des Héritiers
-
--- 1️ ) Créer une vue affichant les descendants, leur alliance et leur puissance héritée
 CREATE OR REPLACE VIEW vue_lignee_royale AS
 SELECT 
-    d.name AS descendant,
-    a.name AS alliance_origine,
-    d.puissance_heritee,
-    AVG(d.puissance_heritee) OVER (PARTITION BY a.id) AS puissance_moyenne_alliance
-FROM descendances d
-JOIN alliances a ON d.allianceID = a.id;
+    dsc.nomDescendant AS descendant,
+    a.nomAlliance AS allianceOrigine,
+    dsc.niveauPuissanceHeritee,
+    AVG(dsc.niveauPuissanceHeritee) OVER (PARTITION BY a.idAlliance) AS puissanceMoyenneAlliance
+FROM descendance dsc
+JOIN alliances a ON dsc.idAlliance = a.idAlliance;
 
--- 2️ ) Afficher la vue
 SELECT * FROM vue_lignee_royale;
 
--- Exercice IV : Le miroir des instructions 
-
--- 1) Creer une table pour gerer les intrusions 
-CREATE TABLE INTRUSIONS ( 
-    id INT AUTO_INCREMENT PRIMARY KEY, 
+-- Exercice IV : Intrusions
+CREATE TABLE journalIntrusions (
+    idIntrusion INT AUTO_INCREMENT PRIMARY KEY,
     utilisateur VARCHAR(100),
-    action VARCHAR(255),
-    dateEvenement DATETIME DEFAULT CURRENT_TIMESTAMP,
-    gravite ENUM('faible', 'moyenne', 'haute') DEFAULT 'faible'
+    actionSuspecte VARCHAR(255),
+    graviteIntrusion INT CHECK (graviteIntrusion BETWEEN 1 AND 10),
+    dateIntrusion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2) Creer un trigger pour journaliser les tentatives d'intrusions
+DELIMITER //
 CREATE TRIGGER log_intrusion
-AFTER INSERT ON journalDesEvenements
+BEFORE DELETE ON roles
 FOR EACH ROW
 BEGIN
-    IF NEW.evenement LIKE '%erreur%' OR NEW.evenement LIKE '%connexion%' THEN
-        INSERT INTO intrusions (utilisateur, action, gravite)
-        VALUES ('inconnu', NEW.evenement, 'haute'); 
-    END IF;
-END;
+    INSERT INTO journalIntrusions (utilisateur, actionSuspecte, graviteIntrusion)
+    VALUES (CURRENT_USER(), 'Tentative de suppression sur roles', 9);
+END //
+DELIMITER ;
 
--- 3) Créer une vue listant les 5 dernières intrusions
-CREATE OR REPLACE VIEW vue_dernieres_intrusions AS
-SELECT *
-FROM intrusions
-ORDER BY date_evenement DESC
+CREATE OR REPLACE VIEW vue_intrusions_recente AS
+SELECT 
+    utilisateur,
+    actionSuspecte,
+    graviteIntrusion,
+    dateIntrusion
+FROM journalIntrusions
+ORDER BY dateIntrusion DESC
 LIMIT 5;
 
--- 4) Afficher la vue
-INSERT INTO journalDesEvenements (evenement) VALUES ('Tentative de connexion refusée');
-INSERT INTO journalDesEvenements (evenement) VALUES ('Erreur critique détectée');
-INSERT INTO journalDesEvenements (evenement) VALUES ('Nouvelle alliance créée : Ordre des Architectes');
+SELECT * FROM vue_intrusions_recente;
 
-
--- EXERCICE V : Les Portails du Réseau
-
-CREATE TABLE pare_feu (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    adresseIP VARCHAR(45),
-    regle ENUM('autoriser', 'bloquer') NOT NULL,
-    description VARCHAR(255),
-    date_ajout DATETIME DEFAULT CURRENT_TIMESTAMP
+-- EXERCICE V : LES PORTAILS DU RÉSEAU (FULL MAJUSCULE)
+CREATE TABLE PARE_FEU (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    ADRESSE_IP VARCHAR(45),
+    REGLE ENUM('AUTORISER', 'BLOQUER') NOT NULL,
+    DESCRIPTION VARCHAR(255),
+    DATE_AJOUT DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2️)Insérer des règles d’autorisation et de blocage
-INSERT INTO pare_feu (adresse_ip, regle, description) VALUES
-('192.168.1.10', 'autoriser', 'Serveur interne'),
-('192.168.1.55', 'bloquer', 'Adresse suspecte détectée'),
-('10.0.0.7', 'bloquer', 'Tentative d’accès non autorisée'),
-('172.16.0.3', 'autoriser', 'Terminal de confiance');
+INSERT INTO PARE_FEU (ADRESSE_IP, REGLE, DESCRIPTION) VALUES
+('192.168.1.10', 'AUTORISER', 'SERVEUR INTERNE'),
+('192.168.1.55', 'BLOQUER', 'ADRESSE SUSPECTE DÉTECTÉE'),
+('10.0.0.7', 'BLOQUER', 'TENTATIVE D''ACCÈS NON AUTORISÉE'),
+('172.16.0.3', 'AUTORISER', 'TERMINAL DE CONFIANCE');
 
--- 3️) Creer une vue affichant uniquement les connexions bloquees
-CREATE OR REPLACE VIEW vue_connexions_bloquees AS
-SELECT adresse_ip, description, date_ajout
-FROM pare_feu
-WHERE regle = 'bloquer';
+CREATE OR REPLACE VIEW VUE_CONNEXIONS_BLOQUEES AS
+SELECT ADRESSE_IP, DESCRIPTION, DATE_AJOUT
+FROM PARE_FEU
+WHERE REGLE = 'BLOQUER';
 
--- 4️ ) Créer une fonction pour ajouter automatiquement une règle au pare-feu
-CREATE FUNCTION ajouter_regle(ip VARCHAR(45), action ENUM('autoriser', 'bloquer'), desc_text VARCHAR(255))
-RETURNS VARCHAR(255)
-DETERMINISTIC
+DELIMITER //
+CREATE PROCEDURE AJOUTER_REGLE (
+    IN P_ADRESSE_IP VARCHAR(45),
+    IN P_REGLE VARCHAR(10),
+    IN P_DESCRIPTION VARCHAR(255)
+)
 BEGIN
-    INSERT INTO pare_feu (adresse_ip, regle, description)
-    VALUES (ip, action, desc_text);
-    RETURN CONCAT('Règle ajoutée pour : ', ip, ' → ', action);
-END
+    INSERT INTO PARE_FEU (ADRESSE_IP, REGLE, DESCRIPTION)
+    VALUES (P_ADRESSE_IP, UPPER(P_REGLE), UPPER(P_DESCRIPTION));
+END //
+DELIMITER ;
+
+CALL AJOUTER_REGLE('203.0.113.99', 'bloquer', 'INTRUSION SUSPECTE');
+
+-- EXERCICE VI – LE SCEAU ROYAL (CHIFFREMENT ET SIGNATURE)
+
+CREATE TABLE messagesRoyaux (
+    idMessage INT AUTO_INCREMENT PRIMARY KEY,
+    auteur VARCHAR(100) NOT NULL,
+    messageChiffre VARBINARY(500) NOT NULL,
+    signatureMessage VARBINARY(500),
+    dateMessage TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+SET @cleRoyale = 'SECRETCLEF123';
+
+INSERT INTO messagesRoyaux (auteur, messageChiffre, signatureMessage)
+VALUES 
+('Roi Louis',
+    AES_ENCRYPT('Protégez la frontière Nord, les orcs approchent.', @cleRoyale),
+    MD5('Protégez la frontière Nord, les orcs approchent.')
+),
+('Roi Louis',
+    AES_ENCRYPT('Convocation du Conseil Royal demain à l’aube.', @cleRoyale),
+    MD5('Convocation du Conseil Royal demain à l’aube.')
+);
+
+CREATE OR REPLACE VIEW vueMessagesDechiffres AS
+SELECT 
+    idMessage,
+    auteur,
+    AES_DECRYPT(messageChiffre, @cleRoyale) AS messageLisible,
+    signatureMessage,
+    dateMessage
+FROM messagesRoyaux;
+
+SELECT * FROM vueMessagesDechiffres;
+
+SELECT 
+    idMessage,
+    auteur,
+    AES_DECRYPT(messageChiffre, @cleRoyale) AS messageLisible,
+    IF(MD5(AES_DECRYPT(messageChiffre, @cleRoyale)) = signatureMessage, 'Authentique', 'Falsifié')
+    AS statutAuthenticite,
+    dateMessage
+FROM messagesRoyaux;
